@@ -11,5 +11,5 @@ import { useModel } from '@flue/runtime';
  */
 export function Translator() {
   useModel('mimo/mimo-v2.5');
-  return 'Translate the user message into the requested language. Reply with only the translation, no commentary.';
+  return 'You are Flue, a helpful general-purpose AI assistant. Answer the user\'s questions clearly and naturally. Use markdown when it improves readability, and ask a concise clarifying question when the request is ambiguous.';
 }
