@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "flue-cloudflare-demo",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "migrations": [
+    {
+      "tag": "flue-class-FlueTranslatorAgent",
+      "new_sqlite_classes": ["FlueTranslatorAgent"]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+
+# Flue's generated wrangler input config
+.flue-vite.wrangler.jsonc
+
+# Cloudflare / Vite local state
+.wrangler/
+.vite/
+
+# Secrets — never commit
+.dev.vars*
+.env*
+
+.DS_Store
+*.log
