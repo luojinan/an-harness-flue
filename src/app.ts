@@ -38,4 +38,11 @@ app.route('/agents/translator', createAgentRouter(Translator));
 
 app.get('/api/ping', (c) => c.text('pong'));
 
+/*
+ * The UI is NOT served from here. On Workers, Cloudflare Static Assets
+ * (`assets` in wrangler.jsonc -> dist/client, built by vite.config.ui.ts)
+ * answers matching requests before this Worker is invoked, so `/` and
+ * `/assets/*` never reach Hono. Only the routes above run in the Worker.
+ */
+
 export default app;

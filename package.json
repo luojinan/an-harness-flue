@@ -11,19 +11,32 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "deploy": "vite build && wrangler deploy",
-    "check": "tsc --noEmit"
+    "deploy": "pnpm run build && wrangler deploy",
+    "check": "tsc --noEmit && tsc --noEmit -p src/ui/tsconfig.json"
   },
   "license": "ISC",
   "dependencies": {
     "@earendil-works/pi-ai": "0.83.0",
+    "@flue/react": "2.0.4",
     "@flue/runtime": "2.0.3",
-    "hono": "^4.13.7"
+    "@flue/sdk": "2.0.3",
+    "@stylexjs/stylex": "0.19.0",
+    "hono": "^4.13.7",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.5",
     "@cloudflare/vite-plugin": "^1.54.7",
     "@cloudflare/workers-types": "^5.20260911.1",
     "@flue/vite": "2.0.3",
+    "@stylexjs/babel-plugin": "0.19.0",
+    "@stylexjs/unplugin": "0.19.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "wrangler": "^4.131.0"
