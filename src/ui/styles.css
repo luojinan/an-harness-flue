@@ -1,73 +1,83 @@
-/*
- * Everything expressible in StyleX now lives in components / tokens.stylex.ts.
- * What remains here is what StyleX cannot represent:
- *
- *   1. Global element selectors (`html`, `body`, `*`) — no element to attach to.
- *   2. The `prefers-reduced-motion` blanket `!important` override.
- *   3. Base UI state styling driven by data-attributes (`[data-open]`,
- *      `[data-ending-style]`, `[data-swiping]`) and the library's custom
- *      properties (`--drawer-swipe-*`, `--collapsible-panel-height`). StyleX
- *      supports pseudo-classes, pseudo-elements and media queries, but not
- *      arbitrary attribute selectors, so Drawer's swipe/enter/exit transitions
- *      and Collapsible's height transition have to be plain CSS.
- */
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-input: var(--input);
+  --color-hover: var(--hover);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-background: var(--destructive-background);
+  --color-ring: var(--ring);
+  --radius-sm: var(--radius-sm-value);
+  --radius-md: var(--radius-md-value);
+  --radius-lg: var(--radius-lg-value);
+}
+
+:root {
+  --background: #0b0b0d;
+  --foreground: #f2f2f5;
+  --card: #16161a;
+  --input: #1c1c21;
+  --hover: #23232a;
+  --border: #2a2a32;
+  --muted-foreground: #9a9aa5;
+  --accent: #f5f5f7;
+  --accent-foreground: #0b0b0d;
+  --destructive: #ff6b6b;
+  --destructive-background: #2a1416;
+  --ring: #6b6b76;
+  --radius-sm-value: 10px;
+  --radius-md-value: 16px;
+  --radius-lg-value: 24px;
+}
 
 *,
 ::before,
-::after {
-  box-sizing: border-box;
-}
+::after { box-sizing: border-box; }
 
 html,
-body {
-  height: 100%;
-  margin: 0;
-}
+body,
+#root { height: 100%; margin: 0; }
 
-/* `bg` / `text` tokens, inlined: a global selector can't read StyleX vars.
-   Keep in sync with tokens.stylex.ts. */
 body {
-  background: #0b0b0d;
-  color: #f2f2f5;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
-/* ---------- Drawer: enter / exit / swipe ---------- */
+@keyframes blink {
+  0%, 60%, 100% { opacity: 0.25; }
+  30% { opacity: 1; }
+}
 
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Base UI drawer transitions are driven by its data attributes. */
 .drawer-popup {
   transform: translateX(var(--drawer-swipe-movement-x, 0px));
   transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .drawer-popup[data-starting-style],
-.drawer-popup[data-ending-style] {
-  transform: translateX(-100%);
-}
+.drawer-popup[data-ending-style] { transform: translateX(-100%); }
+.drawer-popup[data-swiping] { transition-duration: 0ms; }
 
-/* While the finger is down, follow it 1:1 instead of easing behind it. */
-.drawer-popup[data-swiping] {
-  transition-duration: 0ms;
-}
-
-.drawer-backdrop {
-  opacity: 1;
-  transition: opacity 0.3s ease;
-}
-
+.drawer-backdrop { opacity: 1; transition: opacity 0.3s ease; }
 .drawer-backdrop[data-starting-style],
-.drawer-backdrop[data-ending-style] {
-  opacity: 0;
-}
+.drawer-backdrop[data-ending-style] { opacity: 0; }
 
-/* ---------- Collapsible: reasoning panel height ---------- */
-
-/* Base UI measures the content and publishes it as `--collapsible-panel-height`,
-   which is what makes an `auto`-height element animatable. Padding lives on an
-   inner div so it collapses with the box instead of holding it open at 0. */
 .reasoning-panel {
   height: var(--collapsible-panel-height);
   overflow: hidden;
@@ -75,9 +85,7 @@ body {
 }
 
 .reasoning-panel[data-starting-style],
-.reasoning-panel[data-ending-style] {
-  height: 0;
-}
+.reasoning-panel[data-ending-style] { height: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,25 +1,10 @@
 import type { ComponentPropsWithRef } from 'react';
-import * as stylex from '@stylexjs/stylex';
-import { t } from '../../tokens.stylex';
-
-const styles = stylex.create({
-  base: {
-    fontFamily: 'inherit',
-    fontSize: 'inherit',
-    lineHeight: 1.5,
-    color: t.text,
-    backgroundColor: 'transparent',
-    borderStyle: 'none',
-    outline: 'none',
-    resize: 'none',
-    '::placeholder': { color: t.textFaint },
-  },
-});
+import { cn } from '../../lib/utils';
 
 /** `ComponentPropsWithRef` so the composer can hold a ref for auto-grow. */
 export function Textarea({
-  xstyle,
+  className,
   ...props
-}: ComponentPropsWithRef<'textarea'> & { xstyle?: stylex.StyleXStyles }) {
-  return <textarea {...stylex.props(styles.base, xstyle)} {...props} />;
+}: ComponentPropsWithRef<'textarea'>) {
+  return <textarea className={cn('w-full resize-none border-0 bg-transparent px-1 py-2 text-base leading-6 text-foreground outline-none placeholder:text-muted-foreground', className)} {...props} />;
 }
