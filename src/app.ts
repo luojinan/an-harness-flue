@@ -4,6 +4,7 @@ import { createAgentRouter } from '@flue/runtime/routing';
 import { setProvider } from '@flue/runtime';
 import { Hono } from 'hono';
 import { Translator } from './agents/translator.js';
+import { SupabaseAssistant } from './agents/supabase.js';
 
 // Register MiMo as a custom OpenAI-compatible provider
 setProvider(
@@ -35,6 +36,7 @@ const app = new Hono();
 
 // Mount paths are free-form; agent identity comes from the function name.
 app.route('/agents/translator', createAgentRouter(Translator));
+app.route('/agents/supabase', createAgentRouter(SupabaseAssistant));
 
 app.get('/api/ping', (c) => c.text('pong'));
 
