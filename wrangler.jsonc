@@ -3,6 +3,14 @@
   "name": "flue-cloudflare-demo",
   "compatibility_date": "2026-06-01",
   "compatibility_flags": ["nodejs_compat"],
+  // 非敏感配置放在 vars 中（会随代码一起部署）。
+  // 敏感凭据不要写在这里，用 `wrangler secret put` 设置（见文件底部注释）。
+  "vars": {
+    "ALIYUN_OSS_BUCKET": "llm-resoure",
+    "ALIYUN_OSS_REGION": "cn-shenzhen",
+    "ALIYUN_OSS_UPLOAD_PREFIX": "chat-images",
+    "SUPABASE_PROJECT_REF": "knclktpgdzpxdooyprdv"
+  },
   "migrations": [
     {
       "tag": "flue-class-FlueTranslatorAgent",
@@ -14,3 +22,10 @@
     }
   ]
 }
+
+// 敏感凭据（密钥 / Token）不要提交进仓库，上线前用以下命令注入：
+//   wrangler secret put OPENAI_API_KEY
+//   wrangler secret put SUPABASE_ACCESS_TOKEN
+//   wrangler secret put ALIYUN_ACCESS_KEY_ID
+//   wrangler secret put ALIYUN_ACCESS_KEY_SECRET
+// 本地开发时对应值写在 .dev.vars（已被 .gitignore 忽略）。
