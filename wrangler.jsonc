@@ -7,6 +7,10 @@
     {
       "tag": "flue-class-FlueTranslatorAgent",
       "new_sqlite_classes": ["FlueTranslatorAgent"]
+    },
+    {
+      "tag": "flue-class-FlueSupabaseAssistantAgent",
+      "new_sqlite_classes": ["FlueSupabaseAssistantAgent"]
     }
   ]
 }

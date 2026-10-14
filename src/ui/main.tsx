@@ -16,10 +16,12 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { isAllowedChatImageType, MAX_CHAT_IMAGE_SIZE_BYTES, type ChatImageAttachment } from '@/lib/chat-image';
 import { Button } from './components/ui/button';
 import { Textarea } from './components/ui/textarea';
+import { fileToBase64, requestSignedObjectUrl, requestUploadPolicy, uploadFileToOSS } from './lib/oss-upload';
 import { cn } from './lib/utils';
 import './styles.css';
 
@@ -117,7 +119,9 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const pinned = useRef(true);
+  const [attachments, setAttachments] = useState<ChatImageAttachment[]>([]);
 
   const agent = useFlueAgent({ url: `/agents/translator/${currentId}` });
   const busy = ['streaming', 'submitted', 'connecting'].includes(agent.status);
@@ -142,10 +146,99 @@ function App() {
     pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   };
 
+  const updateAttachment = (id: string, patch: Partial<ChatImageAttachment>) => {
+    setAttachments(prev => prev.map(a => (a.id === id ? { ...a, ...patch } : a)));
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => {
+      const target = prev.find(a => a.id === id);
+      if (target?.previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter(a => a.id !== id);
+    });
+  };
+
+  const onFilesSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setError(undefined);
+
+    for (const file of files) {
+      const id = crypto.randomUUID();
+      const attachment: ChatImageAttachment = {
+        id,
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: file.size,
+        status: 'uploading',
+        previewUrl: URL.createObjectURL(file),
+      };
+      setAttachments(prev => [...prev, attachment]);
+
+      try {
+        if (!isAllowedChatImageType(file.type)) {
+          throw new Error('仅支持 JPG、PNG、WEBP、GIF 图片');
+        }
+        if (file.size > MAX_CHAT_IMAGE_SIZE_BYTES) {
+          throw new Error('图片不能超过 10MB');
+        }
+
+        const [base64, policy] = await Promise.all([
+          fileToBase64(file),
+          requestUploadPolicy({
+            conversationId: currentId,
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+        ]);
+
+        await uploadFileToOSS(file, policy);
+
+        let llmImageUrl: string | undefined;
+        try {
+          const signed = await requestSignedObjectUrl(policy.bucket, policy.region, policy.objectKey);
+          llmImageUrl = signed.url;
+        } catch {
+          // 签名预览 URL 失败不阻塞发送
+        }
+
+        updateAttachment(id, {
+          status: 'ready',
+          base64,
+          bucket: policy.bucket,
+          region: policy.region,
+          objectKey: policy.objectKey,
+          llmImageUrl,
+        });
+      } catch (err) {
+        updateAttachment(id, {
+          status: 'upload-error',
+          error: err instanceof Error ? err.message : '上传失败',
+        });
+      }
+    }
+
+    e.target.value = '';
+  };
+
+  const readyImages = attachments
+    .filter((a): a is ChatImageAttachment & { base64: string } => a.status === 'ready' && Boolean(a.base64))
+    .map(a => ({
+      type: 'image' as const,
+      data: a.base64,
+      mimeType: a.mimeType,
+      filename: a.fileName,
+    }));
+  const hasPendingUpload = attachments.some(a => a.status === 'uploading');
+  const canSend = !busy && !hasPendingUpload && (input.trim().length > 0 || readyImages.length > 0);
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if (!canSend) return;
 
     setInput('');
     setError(undefined);
@@ -153,7 +246,9 @@ function App() {
     setSessions(prev => prev.map(s => (s.id === currentId && s.title === NEW_CHAT_TITLE ? { ...s, title: toTitle(text) } : s)));
 
     try {
-      await agent.sendMessage(text);
+      await agent.sendMessage(text, { images: readyImages });
+      setAttachments([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       setInput(text);
       setError(err instanceof Error ? err.message : String(err));
@@ -212,7 +307,55 @@ function App() {
         )}
 
         <form className="mx-auto w-full max-w-[760px]" onSubmit={submit}>
+          {attachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {attachments.map(a => (
+                <div key={a.id} className="flex max-w-full items-center gap-2.5 rounded-[var(--radius-sm-value)] border border-border bg-card py-2 pl-2 pr-1">
+                  {a.previewUrl ? (
+                    <img src={a.previewUrl} alt={a.fileName} className="size-10 shrink-0 rounded-md object-cover" />
+                  ) : (
+                    <div className="grid size-10 shrink-0 place-items-center rounded-md bg-input text-muted-foreground">
+                      <Paperclip size={16} />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] leading-tight text-foreground">{a.fileName}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {a.status === 'uploading' ? '上传中…' : a.status === 'upload-error' ? (a.error ?? '上传失败') : '已就绪'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAttachment(a.id)}
+                    className="grid size-7 shrink-0 place-items-center rounded-full border-0 bg-transparent text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
+                    aria-label="移除图片"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-end gap-2 rounded-[var(--radius-lg-value)] border border-border bg-input py-1.5 pl-2 pr-1.5 transition-colors focus-within:border-muted-foreground">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="hidden"
+              onChange={onFilesSelected}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={busy}
+              className="grid size-9 shrink-0 place-items-center rounded-full border-0 bg-transparent text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-30"
+              aria-label="上传图片"
+              title="上传图片"
+            >
+              <Paperclip size={20} />
+            </button>
             <Textarea
               ref={inputRef}
               className="max-h-[40vh]"
@@ -230,7 +373,7 @@ function App() {
             <button
               className="grid size-9 shrink-0 place-items-center rounded-full border-0 bg-accent text-accent-foreground transition-[opacity,transform] duration-150 active:scale-[0.92] disabled:opacity-30"
               type="submit"
-              disabled={!input.trim() || busy}
+              disabled={!canSend}
               aria-label="发送"
             >
               <Icon icon={ArrowUp} size={20} />

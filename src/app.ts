@@ -2,9 +2,17 @@ import { createProvider, envApiKeyAuth } from '@earendil-works/pi-ai';
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy';
 import { createAgentRouter } from '@flue/runtime/routing';
 import { setProvider } from '@flue/runtime';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { Translator } from './agents/translator.js';
 import { SupabaseAssistant } from './agents/supabase.js';
+import type {
+  ChatSignedObjectUrlRequest,
+  ChatUploadPolicyRequest,
+} from './lib/chat-image.js';
+import {
+  buildChatUploadPolicy,
+  signChatObjectUrl,
+} from './lib/server/chat-aliyun.js';
 
 // Register MiMo as a custom OpenAI-compatible provider
 setProvider(
@@ -39,6 +47,67 @@ app.route('/agents/translator', createAgentRouter(Translator));
 app.route('/agents/supabase', createAgentRouter(SupabaseAssistant));
 
 app.get('/api/ping', (c) => c.text('pong'));
+
+function jsonResponse(c: Context, data: unknown, status = 200) {
+  return c.json({ code: 0, message: 'success', data }, status as never);
+}
+
+function errorResponse(c: Context, message: string, status: number) {
+  return c.json({ code: status, message }, status as never);
+}
+
+// 生成阿里云 OSS 直传策略，浏览器拿到后直接 POST 到 OSS。
+app.post('/api/chat-upload-policy', async (c) => {
+  try {
+    const body = (await c.req.json()) as ChatUploadPolicyRequest;
+    if (!body.conversationId) {
+      return errorResponse(c, 'Missing required field: conversationId', 400);
+    }
+    if (!body.fileName) {
+      return errorResponse(c, 'Missing required field: fileName', 400);
+    }
+    if (!body.contentType) {
+      return errorResponse(c, 'Missing required field: contentType', 400);
+    }
+    if (typeof body.size !== 'number') {
+      return errorResponse(c, 'Missing required field: size', 400);
+    }
+
+    return jsonResponse(c, buildChatUploadPolicy(body));
+  } catch (error) {
+    console.error('Chat upload policy error:', error);
+    return errorResponse(
+      c,
+      error instanceof Error ? error.message : 'Failed to build upload policy',
+      500,
+    );
+  }
+});
+
+// 对已上传到 OSS 的对象生成带签名的访问 URL（预览 / 校验用）。
+app.post('/api/chat-object-url', async (c) => {
+  try {
+    const body = (await c.req.json()) as ChatSignedObjectUrlRequest;
+    if (!body.bucket) {
+      return errorResponse(c, 'Missing required field: bucket', 400);
+    }
+    if (!body.region) {
+      return errorResponse(c, 'Missing required field: region', 400);
+    }
+    if (!body.objectKey) {
+      return errorResponse(c, 'Missing required field: objectKey', 400);
+    }
+
+    return jsonResponse(c, signChatObjectUrl(body));
+  } catch (error) {
+    console.error('Chat object URL error:', error);
+    return errorResponse(
+      c,
+      error instanceof Error ? error.message : 'Failed to sign object URL',
+      500,
+    );
+  }
+});
 
 /*
  * The UI is NOT served from here. On Workers, Cloudflare Static Assets
