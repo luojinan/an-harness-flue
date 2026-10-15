@@ -9,7 +9,11 @@
     "ALIYUN_OSS_BUCKET": "llm-resoure",
     "ALIYUN_OSS_REGION": "cn-shenzhen",
     "ALIYUN_OSS_UPLOAD_PREFIX": "chat-images",
-    "SUPABASE_PROJECT_REF": "knclktpgdzpxdooyprdv"
+    "SUPABASE_PROJECT_REF": "knclktpgdzpxdooyprdv",
+    // Public Supabase publishable key (RLS-protected) used to read the shared
+    // remote skill repo (`skill_files`). Safe to ship; not the management PAT.
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_BeqxNaQ58YbUAI1LCtmWpA_cRAuKoAc",
+    "SKILLS_ROOT_PATH": "/skills"
   },
   "migrations": [
     {
