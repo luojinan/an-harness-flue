@@ -1,17 +1,32 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The app ships a single dark theme, so opt into shadcn's class-based dark
+   variant and keep `.dark` pinned on <html>. */
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-input: var(--input);
-  --color-hover: var(--hover);
-  --color-border: var(--border);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-background: var(--destructive-background);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-hover: var(--hover);
   --color-ring: var(--ring);
   --radius-sm: var(--radius-sm-value);
   --radius-md: var(--radius-md-value);
@@ -22,27 +37,47 @@
   --background: #0b0b0d;
   --foreground: #f2f2f5;
   --card: #16161a;
-  --input: #1c1c21;
-  --hover: #23232a;
-  --border: #2a2a32;
+  --card-foreground: #f2f2f5;
+  --popover: #16161a;
+  --popover-foreground: #f2f2f5;
+  --primary: #f5f5f7;
+  --primary-foreground: #0b0b0d;
+  --secondary: #23232a;
+  --secondary-foreground: #f2f2f5;
+  --muted: #23232a;
   --muted-foreground: #9a9aa5;
   --accent: #f5f5f7;
   --accent-foreground: #0b0b0d;
   --destructive: #ff6b6b;
+  --destructive-foreground: #0b0b0d;
   --destructive-background: #2a1416;
+  --input: #1c1c21;
+  --hover: #23232a;
+  --border: #2a2a32;
   --ring: #6b6b76;
   --radius-sm-value: 10px;
   --radius-md-value: 16px;
   --radius-lg-value: 24px;
 }
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
 *,
 ::before,
-::after { box-sizing: border-box; }
+::after {
+  box-sizing: border-box;
+}
 
 html,
 body,
-#root { height: 100%; margin: 0; }
+#root {
+  height: 100%;
+  margin: 0;
+}
 
 body {
   background: var(--background);
@@ -55,13 +90,25 @@ body {
 }
 
 @keyframes blink {
-  0%, 60%, 100% { opacity: 0.25; }
-  30% { opacity: 1; }
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Base UI drawer transitions are driven by its data attributes. */
@@ -71,21 +118,21 @@ body {
 }
 
 .drawer-popup[data-starting-style],
-.drawer-popup[data-ending-style] { transform: translateX(-100%); }
-.drawer-popup[data-swiping] { transition-duration: 0ms; }
-
-.drawer-backdrop { opacity: 1; transition: opacity 0.3s ease; }
-.drawer-backdrop[data-starting-style],
-.drawer-backdrop[data-ending-style] { opacity: 0; }
-
-.reasoning-panel {
-  height: var(--collapsible-panel-height);
-  overflow: hidden;
-  transition: height 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+.drawer-popup[data-ending-style] {
+  transform: translateX(-100%);
+}
+.drawer-popup[data-swiping] {
+  transition-duration: 0ms;
 }
 
-.reasoning-panel[data-starting-style],
-.reasoning-panel[data-ending-style] { height: 0; }
+.drawer-backdrop {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.drawer-backdrop[data-starting-style],
+.drawer-backdrop[data-ending-style] {
+  opacity: 0;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
