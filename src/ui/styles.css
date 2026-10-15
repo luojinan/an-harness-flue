@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "streamdown/styles.css";
+@import "./typeset.css";
+
+/* Let Tailwind see the utility classes Streamdown renders. */
+@source "../../node_modules/streamdown/dist/*.js";
 
 /* The app ships a single dark theme, so opt into shadcn's class-based dark
    variant and keep `.dark` pinned on <html>. */
@@ -58,6 +63,37 @@
   --radius-sm-value: 10px;
   --radius-md-value: 16px;
   --radius-lg-value: 24px;
+  /* Consumed by shadcn/typeset. */
+  --radius: 16px;
+  --font-heading: inherit;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Chat context for shadcn/typeset: tighter rhythm than the default. */
+.typeset-chat {
+  --typeset-leading: 1.6;
+  --typeset-flow: 1em;
+}
+
+/* Streamdown's table ships two nested bordered containers (an outer card and an
+   inner scroll box) and draws its own row separators. Typeset also borders the
+   table/cells, so both show up at once. Keep exactly one container border and
+   Streamdown's separators. */
+[data-streamdown="table-wrapper"] {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  padding: 0;
+  gap: 0;
+}
+
+.typeset [data-streamdown="table-wrapper"] table {
+  margin-block-start: 0;
+  border-block-width: 0;
+}
+
+.typeset [data-streamdown="table-wrapper"] :is(td, th) {
+  border-block-width: 0;
 }
 
 @layer base {

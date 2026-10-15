@@ -13,6 +13,7 @@ import {
 } from "@/ui/components/ui/attachment"
 import { Bubble, BubbleContent } from "@/ui/components/ui/bubble"
 import { Message, MessageContent } from "@/ui/components/ui/message"
+import { Markdown } from "@/ui/components/markdown"
 import {
   Trace,
   TraceCollapsible,
@@ -236,9 +237,9 @@ function AssistantParts({ message, streaming }: { message: FlueConversationMessa
     if (part.type === "text") {
       flush()
       nodes.push(
-        <p key={`text-${index}`} className="m-0 whitespace-pre-wrap break-words">
+        <Markdown key={`text-${index}`} isAnimating={streaming}>
           {part.text}
-        </p>,
+        </Markdown>,
       )
     } else if (part.type === "file") {
       flush()
