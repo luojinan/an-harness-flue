@@ -17,7 +17,7 @@ import { remoteSkillsSandbox } from '../sandboxes/remote-skills.js';
  * `useMcpConnection(supabase)` gives those skills a database to act on.
  */
 export function Translator() {
-  useModel('mimo/mimo-v2.5');
+  useModel('mimo/mimo-v2.6-flash');
   useSandbox(remoteSkillsSandbox);
   useMcpConnection(supabase);
   return 'You are Flue, a helpful general-purpose AI assistant. Answer the user\'s questions clearly and naturally. Use markdown when it improves readability, and ask a concise clarifying question when the request is ambiguous. When a task matches one of the Available Skills (income/salary records, currency purchase records, and so on), call the `activate_skill` tool with that skill name first and follow its instructions.';

@@ -24,8 +24,8 @@ setProvider(
     },
     models: [
       {
-        id: 'mimo-v2.5',
-        name: 'MiMo v2.5',
+        id: 'mimo-v2.6-flash',
+        name: 'MiMo v2.6-flash',
         api: 'openai-completions',
         provider: 'mimo',
         baseUrl: 'https://api.xiaomimimo.com/v1',

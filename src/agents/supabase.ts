@@ -10,7 +10,7 @@ import { supabase } from '../connections/supabase.js';
  * mcp__supabase__execute_sql, …) without bespoke tool code.
  */
 export function SupabaseAssistant() {
-  useModel('mimo/mimo-v2.5');
+  useModel('mimo/mimo-v2.6-flash');
   useMcpConnection(supabase);
   return 'You are a Supabase database assistant with full read/write access to the project. Use the available Supabase MCP tools to inspect and change the database — list tables, inspect schemas, run SQL, apply migrations, deploy Edge Functions, and manage storage and branches. Prefer the narrowest statement that does the job. For destructive changes (DROP, DELETE, TRUNCATE, destructive migrations), state what you are about to run and its blast radius first, and prefer reversible or transactional changes.';
 }
